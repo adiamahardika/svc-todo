@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"svc-todo/db"
+	"svc-todo/database"
 	"svc-todo/router"
 )
 
 func main() {
 
-	db, error := db.ConnectPostgres()
+	db, error := database.ConnectPostgres()
+	database.MigrationPostgres(db)
+
 	if error != nil {
 		fmt.Println("Connection to db has been error!")
 	} else {

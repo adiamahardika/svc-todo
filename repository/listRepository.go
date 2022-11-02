@@ -17,7 +17,7 @@ type ListRepositoryInterface interface {
 func (repo *repository) CreateList(request *entity.List) ([]entity.List, error) {
 	var list []entity.List
 
-	error := repo.db.Table("list").Create(&request).Find(&list).Error
+	error := repo.db.Table("lists").Create(&request).Find(&list).Error
 
 	return list, error
 }
@@ -25,7 +25,7 @@ func (repo *repository) CreateList(request *entity.List) ([]entity.List, error) 
 func (repo *repository) CountList() (int64, error) {
 	var count int64
 
-	error := repo.db.Table("list").Count(&count).Error
+	error := repo.db.Table("lists").Count(&count).Error
 
 	return count, error
 }
@@ -33,7 +33,7 @@ func (repo *repository) CountList() (int64, error) {
 func (repo *repository) GetList(request *model.GetListRequest) ([]entity.List, error) {
 	var list []entity.List
 
-	error := repo.db.Table("list").Where("is_active = ?", "true").Limit(request.PageSize).Offset(request.StartIndex).Order("id").Find(&list).Error
+	error := repo.db.Table("lists").Where("is_active = ?", "true").Limit(request.PageSize).Offset(request.StartIndex).Order("id").Find(&list).Error
 
 	return list, error
 }
@@ -41,7 +41,7 @@ func (repo *repository) GetList(request *model.GetListRequest) ([]entity.List, e
 func (repo *repository) GetListWithSub(request *model.GetListRequest) ([]entity.List, error) {
 	var list []entity.List
 
-	error := repo.db.Raw("SELECT list.*, JSON_AGG(sub_list.*) AS sub_list FROM list LEFT OUTER JOIN sub_list ON (list.id = sub_list.id_list) WHERE list.is_active = true GROUP BY list.id ORDER BY list.id LIMIT @PageSize OFFSET @StartIndex", request).Find(&list).Error
+	error := repo.db.Raw("SELECT lists.*, JSON_AGG(sub_lists.*) AS sub_lists FROM lists LEFT OUTER JOIN sub_lists ON (lists.id = sub_lists.id_list) WHERE lists.is_active = 'true' GROUP BY lists.id ORDER BY lists.id LIMIT @PageSize OFFSET @StartIndex", request).Find(&list).Error
 
 	return list, error
 }
@@ -49,7 +49,7 @@ func (repo *repository) GetListWithSub(request *model.GetListRequest) ([]entity.
 func (repo *repository) UpdateList(request *entity.List) (entity.List, error) {
 	var list entity.List
 
-	error := repo.db.Table("list").Model(&request).Updates(request).Find(&list).Error
+	error := repo.db.Table("lists").Model(&request).Updates(request).Find(&list).Error
 
 	return list, error
 }
@@ -57,7 +57,7 @@ func (repo *repository) UpdateList(request *entity.List) (entity.List, error) {
 func (repo *repository) DeleteList(request *int) error {
 	var list entity.List
 
-	error := repo.db.Table("list").Model(&entity.List{Id: *request}).Update("is_active", "false").Find(&list).Error
+	error := repo.db.Table("lists").Model(&entity.List{Id: *request}).Update("is_active", "false").Find(&list).Error
 
 	return error
 }

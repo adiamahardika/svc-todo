@@ -75,6 +75,7 @@ func (service *listService) CreateList(request *model.CreateListRequest, context
 		Title:       request.Title,
 		Description: request.Description,
 		Attachment:  fileName,
+		IsActive:    "true",
 	}
 	if error == nil {
 		_, error = service.listRepository.CreateList(&list)

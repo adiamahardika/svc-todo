@@ -74,6 +74,7 @@ func (service *subListService) CreateSubList(request *model.CreateSubListRequest
 		Description: request.Description,
 		Attachment:  fileName,
 		IdList:      request.IdList,
+		IsActive:    "true",
 	}
 	if error == nil {
 		_, error = service.subListRepository.CreateSubList(&sub_list)
