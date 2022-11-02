@@ -37,6 +37,7 @@ func Router(db *gorm.DB) {
 				list.POST("/create", listController.CreateList)
 				list.GET("/get", listController.GetList)
 				list.GET("/get-with-sub", listController.GetListWithSub)
+				list.PUT("/update", listController.UpdateList)
 			}
 
 			sub_list := v1.Group("/sub-list")

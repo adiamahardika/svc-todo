@@ -21,6 +21,7 @@ type ListServiceInterface interface {
 	CreateList(request *model.CreateListRequest, context echo.Context) (entity.List, error)
 	GetList(request *model.GetListRequest) ([]entity.List, int, error)
 	GetListWithSub(request *model.GetListRequest) ([]model.GetListResponse, int, error)
+	UpdateList(request *model.UpdateListRequest, context echo.Context) (entity.List, error)
 }
 
 type listService struct {
@@ -128,4 +129,55 @@ func (service *listService) GetListWithSub(request *model.GetListRequest) ([]mod
 	}
 
 	return result, int(total_pages), error
+}
+
+func (service *listService) UpdateList(request *model.UpdateListRequest, context echo.Context) (entity.List, error) {
+	var list entity.List
+	var fileType string
+
+	dir := os.Getenv("FILE_DIR")
+	path := dir + "/list"
+	file, error := context.FormFile("attachment")
+	fileName := "-"
+
+	_, check_dir_error := os.Stat(path)
+
+	if os.IsNotExist(check_dir_error) {
+		check_dir_error = os.MkdirAll(path, 0755)
+
+		if check_dir_error != nil {
+			error = check_dir_error
+		}
+	}
+
+	if error == nil {
+		src, err := file.Open()
+
+		if err == nil {
+			fileByte, _ := ioutil.ReadAll(src)
+			fileType = http.DetectContentType(fileByte)
+			split := strings.Split(fileType, "/")
+
+			if fileType == "application/pdf" || fileType == "application/txt" {
+				fileName = strconv.FormatInt(time.Now().Unix(), 10) + "." + split[1]
+				error = ioutil.WriteFile(path+"/"+fileName, fileByte, 0777)
+			} else {
+				error = fmt.Errorf("Only pdf and txt can be allowed!")
+			}
+		}
+
+		defer src.Close()
+	}
+
+	list = entity.List{
+		Id:          request.Id,
+		Title:       request.Title,
+		Description: request.Description,
+		Attachment:  fileName,
+	}
+	if error == nil {
+		_, error = service.listRepository.UpdateList(&list)
+	}
+
+	return list, error
 }

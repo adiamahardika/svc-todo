@@ -10,6 +10,7 @@ type ListRepositoryInterface interface {
 	CountList() (int64, error)
 	GetList(request *model.GetListRequest) ([]entity.List, error)
 	GetListWithSub(request *model.GetListRequest) ([]entity.List, error)
+	UpdateList(request *entity.List) (entity.List, error)
 }
 
 func (repo *repository) CreateList(request *entity.List) ([]entity.List, error) {
@@ -40,6 +41,14 @@ func (repo *repository) GetListWithSub(request *model.GetListRequest) ([]entity.
 	var list []entity.List
 
 	error := repo.db.Raw("SELECT list.*, JSON_AGG(sub_list.*) AS sub_list FROM list LEFT OUTER JOIN sub_list ON (list.id = sub_list.id_list) GROUP BY list.id ORDER BY list.id LIMIT @PageSize OFFSET @StartIndex", request).Find(&list).Error
+
+	return list, error
+}
+
+func (repo *repository) UpdateList(request *entity.List) (entity.List, error) {
+	var list entity.List
+
+	error := repo.db.Table("list").Model(&request).Updates(request).Find(&list).Error
 
 	return list, error
 }

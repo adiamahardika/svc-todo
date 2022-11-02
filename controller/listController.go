@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"svc-todo/entity"
 	"svc-todo/general"
 	"svc-todo/model"
 	"svc-todo/service"
@@ -26,114 +27,104 @@ func (controller *listController) CreateList(context echo.Context) error {
 		error = context.Validate(request)
 	}
 	description := []string{}
+	var http_status int
 	var status *model.StatusResponse
 
 	if error != nil {
 
 		description = append(description, error.Error())
-
+		http_status = http.StatusBadRequest
 		status = &model.StatusResponse{
 			HttpStatusCode: http.StatusBadRequest,
 			ResponseCode:   general.ErrorStatusCode,
 			Description:    description,
 		}
-		return context.JSON(http.StatusBadRequest, model.StandardResponse{
-			Status: *status,
-		})
+
 	} else {
-		list, error := controller.listService.CreateList(request, context)
+		_, error = controller.listService.CreateList(request, context)
 
 		if error == nil {
 
 			description = append(description, "Success")
-
+			http_status = http.StatusOK
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusOK,
 				ResponseCode:   general.SuccessStatusCode,
 				Description:    description,
 			}
-			return context.JSON(http.StatusOK, model.StandardResponse{
-				Status: *status,
-				Result: list,
-			})
 
 		} else {
 
 			description = append(description, error.Error())
-
+			http_status = http.StatusBadRequest
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusBadRequest,
 				ResponseCode:   general.ErrorStatusCode,
 				Description:    description,
 			}
-			return context.JSON(http.StatusBadRequest, model.StandardResponse{
-				Status: *status,
-			})
-
 		}
 	}
+
+	return context.JSON(http_status, model.StandardResponse{
+		Status: *status,
+	})
 }
 
 func (controller *listController) GetList(context echo.Context) error {
 
 	request := new(model.GetListRequest)
 	error := context.Bind(request)
-
 	description := []string{}
+	var http_status int
 	var status *model.StatusResponse
+	var list []entity.List
+	var total_pages int
 
 	if error != nil {
 
 		description = append(description, error.Error())
-
+		http_status = http.StatusBadRequest
 		status = &model.StatusResponse{
 			HttpStatusCode: http.StatusBadRequest,
 			ResponseCode:   general.ErrorStatusCode,
 			Description:    description,
 		}
-		return context.JSON(http.StatusBadRequest, model.StandardResponse{
-			Status: *status,
-		})
+
 	} else {
-		list, total_pages, error := controller.listService.GetList(request)
+		list, total_pages, error = controller.listService.GetList(request)
 
 		if error == nil {
 
 			description = append(description, "Success")
-
+			http_status = http.StatusOK
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusOK,
 				ResponseCode:   general.SuccessStatusCode,
 				Description:    description,
 			}
-			page := struct {
-				Page       int `json:"page"`
-				TotalPages int `json:"totalPages"`
-			}{
-				Page:       request.PageNo,
-				TotalPages: total_pages,
-			}
-			return context.JSON(http.StatusOK, model.StandardResponse{
-				Status: *status,
-				Result: list,
-				Page:   page,
-			})
 
 		} else {
 
 			description = append(description, error.Error())
-
+			http_status = http.StatusBadRequest
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusBadRequest,
 				ResponseCode:   general.ErrorStatusCode,
 				Description:    description,
 			}
-			return context.JSON(http.StatusBadRequest, model.StandardResponse{
-				Status: *status,
-			})
 
 		}
 	}
+
+	page := model.PaginationResponse{
+		Page:       request.PageNo,
+		TotalPages: total_pages,
+	}
+	return context.JSON(http_status, model.StandardResponse{
+		Status: *status,
+		Result: list,
+		Page:   page,
+	})
 }
 
 func (controller *listController) GetListWithSub(context echo.Context) error {
@@ -142,58 +133,107 @@ func (controller *listController) GetListWithSub(context echo.Context) error {
 	error := context.Bind(request)
 
 	description := []string{}
+	var http_status int
 	var status *model.StatusResponse
+	var list []model.GetListResponse
+	var total_pages int
 
 	if error != nil {
 
 		description = append(description, error.Error())
-
+		http_status = http.StatusBadRequest
 		status = &model.StatusResponse{
 			HttpStatusCode: http.StatusBadRequest,
 			ResponseCode:   general.ErrorStatusCode,
 			Description:    description,
 		}
-		return context.JSON(http.StatusBadRequest, model.StandardResponse{
-			Status: *status,
-		})
+
 	} else {
-		list, total_pages, error := controller.listService.GetListWithSub(request)
+		list, total_pages, error = controller.listService.GetListWithSub(request)
 
 		if error == nil {
 
 			description = append(description, "Success")
-
+			http_status = http.StatusOK
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusOK,
 				ResponseCode:   general.SuccessStatusCode,
 				Description:    description,
 			}
-			page := struct {
-				Page       int `json:"page"`
-				TotalPages int `json:"totalPages"`
-			}{
-				Page:       request.PageNo,
-				TotalPages: total_pages,
-			}
-			return context.JSON(http.StatusOK, model.StandardResponse{
-				Status: *status,
-				Result: list,
-				Page:   page,
-			})
 
 		} else {
 
 			description = append(description, error.Error())
-
+			http_status = http.StatusBadRequest
 			status = &model.StatusResponse{
 				HttpStatusCode: http.StatusBadRequest,
 				ResponseCode:   general.ErrorStatusCode,
 				Description:    description,
 			}
-			return context.JSON(http.StatusBadRequest, model.StandardResponse{
-				Status: *status,
-			})
 
 		}
 	}
+
+	page := model.PaginationResponse{
+		Page:       request.PageNo,
+		TotalPages: total_pages,
+	}
+
+	return context.JSON(http_status, model.StandardResponse{
+		Status: *status,
+		Result: list,
+		Page:   page,
+	})
+}
+
+func (controller *listController) UpdateList(context echo.Context) error {
+
+	request := new(model.UpdateListRequest)
+
+	error := context.Bind(request)
+	if error == nil {
+		error = context.Validate(request)
+	}
+	description := []string{}
+	var http_status int
+	var status *model.StatusResponse
+
+	if error != nil {
+
+		description = append(description, error.Error())
+		http_status = http.StatusBadRequest
+		status = &model.StatusResponse{
+			HttpStatusCode: http.StatusBadRequest,
+			ResponseCode:   general.ErrorStatusCode,
+			Description:    description,
+		}
+
+	} else {
+		_, error = controller.listService.UpdateList(request, context)
+
+		if error == nil {
+
+			description = append(description, "Success")
+			http_status = http.StatusOK
+			status = &model.StatusResponse{
+				HttpStatusCode: http.StatusOK,
+				ResponseCode:   general.SuccessStatusCode,
+				Description:    description,
+			}
+
+		} else {
+
+			description = append(description, error.Error())
+			http_status = http.StatusBadRequest
+			status = &model.StatusResponse{
+				HttpStatusCode: http.StatusBadRequest,
+				ResponseCode:   general.ErrorStatusCode,
+				Description:    description,
+			}
+		}
+	}
+
+	return context.JSON(http_status, model.StandardResponse{
+		Status: *status,
+	})
 }
