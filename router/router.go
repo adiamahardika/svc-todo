@@ -22,6 +22,9 @@ func Router(db *gorm.DB) {
 	listService := service.ListService(repository)
 	listController := controller.ListController(listService)
 
+	subListService := service.SubListService(repository)
+	subListController := controller.SubListController(subListService)
+
 	dir := os.Getenv("FILE_DIR")
 	router.Static("/assets", dir)
 
@@ -34,6 +37,11 @@ func Router(db *gorm.DB) {
 				list.POST("/create", listController.CreateList)
 				list.GET("/get", listController.GetList)
 				list.GET("/get-with-sub", listController.GetListWithSub)
+			}
+
+			sub_list := v1.Group("/sub-list")
+			{
+				sub_list.POST("/create", subListController.CreateSubList)
 			}
 		}
 	}
