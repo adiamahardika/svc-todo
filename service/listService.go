@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -19,6 +20,7 @@ import (
 type ListServiceInterface interface {
 	CreateList(request *model.CreateListRequest, context echo.Context) (entity.List, error)
 	GetList(request *model.GetListRequest) ([]entity.List, int, error)
+	GetListWithSub(request *model.GetListRequest) ([]model.GetListResponse, int, error)
 }
 
 type listService struct {
@@ -33,9 +35,8 @@ func (service *listService) CreateList(request *model.CreateListRequest, context
 	var list entity.List
 	var fileType string
 
-	date_now := time.Now()
 	dir := os.Getenv("FILE_DIR")
-	path := dir + "/list/" + date_now.Format("2006-01-02")
+	path := dir + "/list"
 	file, error := context.FormFile("attachment")
 	fileName := "-"
 
@@ -90,10 +91,41 @@ func (service *listService) GetList(request *model.GetListRequest) ([]entity.Lis
 	request.StartIndex = request.PageNo * request.PageSize
 	total_data, error := service.listRepository.CountList()
 	total_pages := math.Ceil(float64(total_data) / float64(request.PageSize))
+	url := os.Getenv("FILE_URL")
 
 	if error == nil {
 		list, error = service.listRepository.GetList(request)
+		for index, value := range list {
+			list[index].Attachment = url + "list/" + value.Attachment
+		}
 	}
 
 	return list, int(total_pages), error
+}
+
+func (service *listService) GetListWithSub(request *model.GetListRequest) ([]model.GetListResponse, int, error) {
+	var list []entity.List
+	var result []model.GetListResponse
+
+	if request.PageSize == 0 {
+		request.PageSize = math.MaxInt16
+	}
+
+	request.StartIndex = request.PageNo * request.PageSize
+	total_data, error := service.listRepository.CountList()
+	total_pages := math.Ceil(float64(total_data) / float64(request.PageSize))
+	url := os.Getenv("FILE_URL")
+
+	if error == nil {
+		list, error = service.listRepository.GetListWithSub(request)
+
+		for _, value := range list {
+			var sub_list []*entity.SubList
+			json.Unmarshal([]byte(value.SubList), &sub_list)
+
+			result = append(result, model.GetListResponse{Id: value.Id, Title: value.Title, Description: value.Description, Attachment: url + "list/" + value.Attachment, SubList: sub_list})
+		}
+	}
+
+	return result, int(total_pages), error
 }
