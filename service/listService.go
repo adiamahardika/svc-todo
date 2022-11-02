@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,7 +17,8 @@ import (
 )
 
 type ListServiceInterface interface {
-	CreateList(request *model.ListRequest, context echo.Context) (entity.List, error)
+	CreateList(request *model.CreateListRequest, context echo.Context) (entity.List, error)
+	GetList(request *model.GetListRequest) ([]entity.List, int, error)
 }
 
 type listService struct {
@@ -27,7 +29,7 @@ func ListService(listRepository repository.ListRepositoryInterface) *listService
 	return &listService{listRepository}
 }
 
-func (service *listService) CreateList(request *model.ListRequest, context echo.Context) (entity.List, error) {
+func (service *listService) CreateList(request *model.CreateListRequest, context echo.Context) (entity.List, error) {
 	var list entity.List
 	var fileType string
 
@@ -76,4 +78,22 @@ func (service *listService) CreateList(request *model.ListRequest, context echo.
 	}
 
 	return list, error
+}
+
+func (service *listService) GetList(request *model.GetListRequest) ([]entity.List, int, error) {
+	var list []entity.List
+
+	if request.PageSize == 0 {
+		request.PageSize = math.MaxInt16
+	}
+
+	request.StartIndex = request.PageNo * request.PageSize
+	total_data, error := service.listRepository.CountList()
+	total_pages := math.Ceil(float64(total_data) / float64(request.PageSize))
+
+	if error == nil {
+		list, error = service.listRepository.GetList(request)
+	}
+
+	return list, int(total_pages), error
 }

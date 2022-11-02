@@ -32,6 +32,7 @@ func Router(db *gorm.DB) {
 			list := v1.Group("/list")
 			{
 				list.POST("/create", listController.CreateList)
+				list.GET("/get", listController.GetList)
 			}
 		}
 	}
