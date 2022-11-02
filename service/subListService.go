@@ -19,6 +19,7 @@ type SubListServiceInterface interface {
 	CreateSubList(request *model.CreateSubListRequest, context echo.Context) (entity.SubList, error)
 	GetSubList(request *entity.SubList) ([]entity.SubList, error)
 	UpdateSubList(request *model.UpdateSubListRequest, context echo.Context) (entity.SubList, error)
+	DeleteSubList(request *int) error
 }
 
 type subListService struct {
@@ -145,4 +146,11 @@ func (service *subListService) UpdateSubList(request *model.UpdateSubListRequest
 	}
 
 	return sub_list, error
+}
+
+func (service *subListService) DeleteSubList(request *int) error {
+
+	error := service.subListRepository.DeleteSubList(request)
+
+	return error
 }

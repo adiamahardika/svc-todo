@@ -46,6 +46,7 @@ func Router(db *gorm.DB) {
 				sub_list.POST("/create", subListController.CreateSubList)
 				sub_list.GET("/get", subListController.GetSubList)
 				sub_list.PUT("/update", subListController.UpdateSubList)
+				sub_list.DELETE("/delete/:id", subListController.DeleteSubList)
 			}
 		}
 	}
