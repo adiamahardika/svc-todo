@@ -17,6 +17,7 @@ import (
 
 type SubListServiceInterface interface {
 	CreateSubList(request *model.CreateSubListRequest, context echo.Context) (entity.SubList, error)
+	GetSubList(request *entity.SubList) ([]entity.SubList, error)
 }
 
 type subListService struct {
@@ -70,10 +71,24 @@ func (service *subListService) CreateSubList(request *model.CreateSubListRequest
 		Title:       request.Title,
 		Description: request.Description,
 		Attachment:  fileName,
+		IdList:      request.IdList,
 	}
 	if error == nil {
 		_, error = service.subListRepository.CreateSubList(&sub_list)
 	}
 
+	return sub_list, error
+}
+
+func (service *subListService) GetSubList(request *entity.SubList) ([]entity.SubList, error) {
+
+	url := os.Getenv("FILE_URL")
+	sub_list, error := service.subListRepository.GetSubList(request)
+
+	if error == nil {
+		for index, value := range sub_list {
+			sub_list[index].Attachment = url + "sub_list/" + value.Attachment
+		}
+	}
 	return sub_list, error
 }
