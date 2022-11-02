@@ -38,6 +38,7 @@ func Router(db *gorm.DB) {
 				list.GET("/get", listController.GetList)
 				list.GET("/get-with-sub", listController.GetListWithSub)
 				list.PUT("/update", listController.UpdateList)
+				list.DELETE("/delete/:id", listController.DeleteList)
 			}
 
 			sub_list := v1.Group("/sub-list")

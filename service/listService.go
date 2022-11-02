@@ -22,6 +22,7 @@ type ListServiceInterface interface {
 	GetList(request *model.GetListRequest) ([]entity.List, int, error)
 	GetListWithSub(request *model.GetListRequest) ([]model.GetListResponse, int, error)
 	UpdateList(request *model.UpdateListRequest, context echo.Context) (entity.List, error)
+	DeleteList(request *int) error
 }
 
 type listService struct {
@@ -180,4 +181,11 @@ func (service *listService) UpdateList(request *model.UpdateListRequest, context
 	}
 
 	return list, error
+}
+
+func (service *listService) DeleteList(request *int) error {
+
+	error := service.listRepository.DeleteList(request)
+
+	return error
 }

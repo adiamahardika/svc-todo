@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"svc-todo/entity"
 	"svc-todo/general"
 	"svc-todo/model"
@@ -230,6 +231,43 @@ func (controller *listController) UpdateList(context echo.Context) error {
 				ResponseCode:   general.ErrorStatusCode,
 				Description:    description,
 			}
+		}
+	}
+
+	return context.JSON(http_status, model.StandardResponse{
+		Status: *status,
+	})
+}
+
+func (controller *listController) DeleteList(context echo.Context) error {
+
+	id := context.Param("id")
+	parse, error := strconv.Atoi(id)
+
+	description := []string{}
+	var http_status int
+	var status *model.StatusResponse
+
+	error = controller.listService.DeleteList(&parse)
+
+	if error == nil {
+
+		description = append(description, "Success")
+		http_status = http.StatusOK
+		status = &model.StatusResponse{
+			HttpStatusCode: http.StatusOK,
+			ResponseCode:   general.SuccessStatusCode,
+			Description:    description,
+		}
+
+	} else {
+
+		description = append(description, error.Error())
+		http_status = http.StatusBadRequest
+		status = &model.StatusResponse{
+			HttpStatusCode: http.StatusBadRequest,
+			ResponseCode:   general.ErrorStatusCode,
+			Description:    description,
 		}
 	}
 
